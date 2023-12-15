@@ -1,0 +1,40 @@
+{
+  "id": "droplet",
+  "title": "Droplet",
+  "description": "A small module to allow player to drop items and effects on other players tokens",
+  "authors": [
+    {
+    "name": "saibot"
+    }
+  ],
+  "version": "0.0.0",
+  "compatibility": {
+    "minimum": "10",
+    "verified": "11"
+  },
+  "socket": "true",
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json",
+      "flags": {}
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json",
+      "flags": {}
+    }
+  ],
+  "esmodules": [
+	"scripts/DropScript.js"
+  ],
+  "url": "https://github.com/Saibot393/droplet",
+  "download": "https://github.com/Saibot393/droplet/archive/refs/tags/v2.17.0.zip",
+  "manifest": "https://github.com/Saibot393/droplet/releases/latest/download/module.json",
+  "readme": "https://github.com/Saibot393/droplet/blob/main/README.md",
+  "changelog": "https://github.com/Saibot393/droplet/blob/main/CHANGELOG.md",
+  "bugs": "https://github.com/Saibot393/droplet/issues",
+  "allowBugReporter": true
+}
