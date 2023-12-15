@@ -28,7 +28,9 @@
     }
   ],
   "esmodules": [
-	"scripts/DropScript.js"
+	"scripts/DropScript.js",
+	"scripts/helpers/SocketHandler.js",
+	"scripts/settings/DropSettings.js"
   ],
   "url": "https://github.com/Saibot393/droplet",
   "download": "https://github.com/Saibot393/droplet/archive/refs/tags/v2.17.0.zip",
