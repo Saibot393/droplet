@@ -1,10 +1,14 @@
-import { TraferRequest } from "../DropScript.js";
+import { TransferRequest } from "../ItemDropScript.js";
+import { switchScene } from "../utils/Dropletutils.js";
 
 //execute functions with pData depending on pFunction
 function organiseSocketEvents({pFunction, pData} = {}) {
 	switch(pFunction) {
-		case "TraferRequest":
-			TraferRequest(pData);
+		case "TransferRequest":
+			TransferRequest(pData);
+			break;
+		case "switchScene":
+			switchScene(pData);
 			break;
 	}
 }

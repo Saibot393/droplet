@@ -1,3 +1,5 @@
+import {cModuleName, Translate} from "../utils/Dropletutils.js";
+
 Hooks.once("init", () => {  // game.settings.get(cModuleName, "")
   //Settings
   game.settings.register(cModuleName, "TransferChatMessage", {

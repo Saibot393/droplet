@@ -17,7 +17,7 @@ class Dropletutils {
 	}
 	
 	static validTarget(pToken) {
-		return pToken.actor?.hasPlayerOwner;
+		return pToken.actor?.hasPlayerOwner || game.user.isGM;
 	}
 	
 	static validObject(pObject) {
@@ -25,8 +25,20 @@ class Dropletutils {
 	}
 }
 
+//for view switching
+async function switchScene( {pUserID, pSceneID, px, py} = {}) {
+	if ((game.user.id == pUserID) && (canvas.scene.id != pSceneID)) {
+		//change only if intended user and not already on target scene
+		
+		await game.scenes.get(pSceneID)?.view();
+		if (px != undefined && py != undefined) {
+			canvas.pan({ x: px, y: py });
+		}
+	}
+}
+
 function Translate(pName, pWords = {}){
-	let vContent = Translate(pName);
+	let vContent = game.i18n.localize(cModuleName+"."+pName);
 	
 	for (let vWord of Object.keys(pWords)) {
 		vContent = vContent.replace("{" + vWord + "}", pWords[vWord]);
@@ -35,4 +47,4 @@ function Translate(pName, pWords = {}){
 	return vContent;
 }
 
-export {cModuleName, Dropletutils, Translate};
+export {cModuleName, Dropletutils, switchScene, Translate};

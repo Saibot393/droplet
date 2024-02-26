@@ -1,15 +1,15 @@
 import {cModuleName, Dropletutils, Translate} from "./utils/Dropletutils.js";
 
-const cValidDropTypes = ["Item", "ActiveEffect"];
+const cValidDropTypes = ["Item", "ActiveEffect", "weapon", "gear"];
 const cNoDeleteTypes = ["ActiveEffect"];
 
-class DropManager {
+class ItemDropManager {
 	//DECLARATIONS
 	static InitiateTransfer(pObject, pTarget, vOptions) {} //starts a transfer of pObject to pTarget
 	
 	static RequestTransfer(pSource, pTarget, pTransferObjects, vOptions) {} //starts a request for a GM to transfer pTransferObject from pSource to pTarget
 	
-	static async TraferRequest(pData) {} //answers a transfere request (GM only)
+	static async TransferRequest(pData) {} //answers a transfere request (GM only)
 	
 	static TransferObjectGM(pSource, pTarget, pTransferObjects, pInfos) {} //transfers an object from pSource to pTarget
 	
@@ -23,42 +23,54 @@ class DropManager {
 	static InitiateTransfer(pObject, pTarget, vOptions) {
 		if (pObject && pTarget) {
 			if (Dropletutils.validTarget(pTarget) && Dropletutils.validObject(pObject)) {
-				DropManager.RequestTransfer(pObject.parent, pTarget, [pObject], vOptions);
+				console.log("check3");
+				ItemDropManager.RequestTransfer(pObject.parent, pTarget, [pObject], vOptions);
 			}
 		}
 	}
 	
 	static RequestTransfer(pSource, pTarget, pTransferObjects, vOptions) {
-		let vData = {};
-		
-		if (pSource) {
-			vData.sourceType = pSource?.documentName;
-			vData.sourceID = pSource?.id;
-			vData.sourceUuid = pSource?.uuid;
-			vData.sourceSceneID = pSource?.parent?.id;
+		if (game.user.isGM) {
+			let vInfos = {};
+			
+			vInfos.userID = game.user.id;
+			
+			vInfos.options = vOptions;
+			
+			ItemDropManager.TransferObjectGM(pSource, pTarget, pTransferObjects, vInfos);
 		}
-		
-		if (pTarget) {
-			vData.targetType = pTarget?.documentName;
-			vData.targetID = pTarget?.id;
-			vData.targetUuid = pTarget?.uuid;
-			vData.targetSceneID = pTarget?.parent?.id;
-		}
+		else {
+			let vData = {};
+			
+			if (pSource) {
+				vData.sourceType = pSource?.documentName;
+				vData.sourceID = pSource?.id;
+				vData.sourceUuid = pSource?.uuid;
+				vData.sourceSceneID = pSource?.parent?.id;
+			}
+			
+			if (pTarget) {
+				vData.targetType = pTarget?.documentName;
+				vData.targetID = pTarget?.id;
+				vData.targetUuid = pTarget?.uuid;
+				vData.targetSceneID = pTarget?.parent?.id;
+			}
 
-		if (pTransferObjects) {
-			vData.transferTypes = pTransferObjects?.map(vObject => vObject.documentName);
-			vData.transferIDs = pTransferObjects?.map(vObject => vObject.id);
-			vData.transferUuids = pTransferObjects?.map(vObject => vObject.uuid);
+			if (pTransferObjects) {
+				vData.transferTypes = pTransferObjects?.map(vObject => vObject.documentName);
+				vData.transferIDs = pTransferObjects?.map(vObject => vObject.id);
+				vData.transferUuids = pTransferObjects?.map(vObject => vObject.uuid);
+			}
+			
+			vData.userID = game.user.id;
+			
+			vData.options = vOptions;
+			
+			game.socket.emit("module.droplet", {pFunction : "TransferRequest", pData : vData});
 		}
-		
-		vData.userID = game.user.id;
-		
-		vData.options = vOptions;
-		
-		game.socket.emit("module.droplet", {pFunction : "TraferRequest", pData : vData});
 	}
 	
-	static async TraferRequest(pData) {
+	static async TransferRequest(pData) {
 		if (game.user.isGM) {
 			let vSource = await fromUuid(pData.sourceUuid);
 			
@@ -77,7 +89,7 @@ class DropManager {
 			
 			vInfos.userID = pData.userID;
 			
-			DropManager.TransferObjectGM(vSource, vTarget, vObjects, vInfos);
+			ItemDropManager.TransferObjectGM(vSource, vTarget, vObjects, vInfos);
 		}
 	}
 	
@@ -113,8 +125,8 @@ class DropManager {
 							}
 							
 							let vInfos = {NoDelete : cNoDelete, ObjectType : vObjectType};
-							
-							DropManager.createTransferMessage(vInfos.userID, vCopy, vSourceActor, vTargetActor, vInfos);
+							console.log(pInfos);
+							ItemDropManager.createTransferMessage(pInfos.userID, vCopy, vSourceActor, vTargetActor, vInfos);
 						}
 					}
 				}
@@ -129,33 +141,42 @@ class DropManager {
 			let vSourceName = pSource?.name;
 			let vTargetName = pTarget?.name;
 			
-			let vFlavor = `	<p>${Translate("ChatMessage.ObjectTransfer." + pInfos.ObjectType + (vInfos.NoDelete ? "NoDelte" : "Delete"), {pUserName : vUserName, pSourceName : vSourceName, pTargetName : vTargetName})}</p>
+			let vFlavor = `	<p>${Translate("ChatMessage.ObjectTransfer." + pInfos.ObjectType + (pInfos.NoDelete ? "NoDelte" : "Delete"), {pUserName : vUserName, pSourceName : vSourceName, pTargetName : vTargetName})}</p>
 							<div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:1em">
 								<img src="${pObject.img}" style = "height: 2em;">
-								<p>${pObject.name}}</p>
+								<p>${pObject.name}</p>
 							</div>`;
 			
-			ChatMessage.create({{user: pUserID, flavor : vFlavor, type : 5}); //CHAT MESSAGE
+			ChatMessage.create({user: pUserID, flavor : vFlavor, type : 5}); //CHAT MESSAGE
 		}
 	} 
 	
 	//ons
 	static async onCanvasDrop(pInfos) {
 		if (!game.user.isGM || true) { //not necessary for GMs
-			console.log(pInfos.type);
 			if (cValidDropTypes.includes(pInfos.type)) {
 				let vTargetToken = Dropletutils.TokenatPosition(pInfos);
 				
-				let vObject = await fromUuid(pInfos.uuid);
+				let vObject;
+
+				if (pInfos.uuid) {
+					vObject = await fromUuid(pInfos.uuid);
+				}
+				
+				if (!vObject) {
+					if (pInfos.actorId && pInfos.itemId) {
+						vObject = game.actors.get(pInfos.actorId)?.items.get(pInfos.itemId);
+					}
+				}
 				
 				let vOptions = {};
 				
-				DropManager.InitiateTransfer(vObject, vTargetToken, vOptions);
+				ItemDropManager.InitiateTransfer(vObject, vTargetToken, vOptions);
 			}
 		}
 	}
 }
 
-Hooks.on("dropCanvasData", (pTarget, pInfos) => {DropManager.onCanvasDrop(pInfos)});
+Hooks.on("dropCanvasData", (pTarget, pInfos) => {console.log(pInfos); ItemDropManager.onCanvasDrop(pInfos)});
 
-export function TraferRequest(pData) {DropManager.TraferRequest(pData)};
+export function TransferRequest(pData) {ItemDropManager.TransferRequest(pData)};
