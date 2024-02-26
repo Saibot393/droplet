@@ -23,7 +23,7 @@
 					"ownedonly"				: "Nur Eigene",
 					"playersonly"			: "Nur Spieler",
 					"friendliesonly"		: "Nur Befreundete",
-					"neutral"				: "Neutrale und Befreundete"
+					"neutrals"				: "Neutrale und Befreundete"
 				}
 			},
 			

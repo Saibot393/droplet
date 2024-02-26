@@ -23,7 +23,7 @@
 					"ownedonly"				: "Owned only",
 					"playersonly"			: "Players only",
 					"friendliesonly"		: "Friendlies only",
-					"neutral"				: "Neutrals and Friendlies"
+					"neutrals"				: "Neutrals and Friendlies"
 				}
 			},
 			
