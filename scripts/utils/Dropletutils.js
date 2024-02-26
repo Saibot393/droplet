@@ -17,7 +17,15 @@ class Dropletutils {
 	}
 	
 	static validTarget(pToken) {
-		return pToken.actor?.hasPlayerOwner || game.user.isGM;
+		if (game.user.isGM) return true;
+		
+		switch (game.settings.get(cModuleName, "allowPlayerItemTransfer")) {
+			case "no": return false;
+			case "ownedonly": return pToken.isOwner;
+			case "playersonly": return pToken.actor?.hasPlayerOwner;
+			case "friendlies": return pToken.disposition >= 1;
+			case "neutrals": return pToken.disposition >= 0;
+		}
 	}
 	
 	static validObject(pObject) {

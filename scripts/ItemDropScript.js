@@ -1,6 +1,6 @@
 import {cModuleName, Dropletutils, Translate} from "./utils/Dropletutils.js";
 
-const cValidDropTypes = ["Item", "ActiveEffect", "weapon", "gear"];
+const cValidDropTypes = ["Item", "ActiveEffect"];
 const cNoDeleteTypes = ["ActiveEffect"];
 
 class ItemDropManager {
@@ -23,7 +23,6 @@ class ItemDropManager {
 	static InitiateTransfer(pObject, pTarget, vOptions) {
 		if (pObject && pTarget) {
 			if (Dropletutils.validTarget(pTarget) && Dropletutils.validObject(pObject)) {
-				console.log("check3");
 				ItemDropManager.RequestTransfer(pObject.parent, pTarget, [pObject], vOptions);
 			}
 		}
@@ -100,8 +99,6 @@ class ItemDropManager {
 					let vObjectType = vObject.documentName;
 					
 					if (cValidDropTypes.includes(vObjectType)) {
-						const cNoDelete = cNoDeleteTypes.includes(vObjectType);
-						
 						let vSourceActor = pSource?.actor;
 						
 						if (!vSourceActor && pSource?.documentName == "Actor") {
@@ -114,6 +111,8 @@ class ItemDropManager {
 							vTargetActor = pTarget;
 						}
 						
+						const cNoDelete = !vSourceActor || cNoDeleteTypes.includes(vObjectType);
+						
 						if (vTargetActor) {
 						
 							let vCopy = duplicate(vObject);
@@ -121,12 +120,16 @@ class ItemDropManager {
 							vTargetActor.createEmbeddedDocuments(vObjectType, [vCopy]);
 							
 							if (vSourceActor && !cNoDelete) {
-								vSourceActor.deleteEmbeddedDocuments(vObjectType, [vObject.id]);
+								if (game.settings.get(cModuleName, "deleteItemonTransfer")) {
+									vSourceActor.deleteEmbeddedDocuments(vObjectType, [vObject.id]);
+								}
 							}
 							
 							let vInfos = {NoDelete : cNoDelete, ObjectType : vObjectType};
-							console.log(pInfos);
-							ItemDropManager.createTransferMessage(pInfos.userID, vCopy, vSourceActor, vTargetActor, vInfos);
+							
+							if (game.settings.get(cModuleName, "TransferChatMessage")) {
+								ItemDropManager.createTransferMessage(pInfos.userID, vCopy, vSourceActor, vTargetActor, vInfos);
+							}
 						}
 					}
 				}
@@ -141,7 +144,7 @@ class ItemDropManager {
 			let vSourceName = pSource?.name;
 			let vTargetName = pTarget?.name;
 			
-			let vFlavor = `	<p>${Translate("ChatMessage.ObjectTransfer." + pInfos.ObjectType + (pInfos.NoDelete ? "NoDelte" : "Delete"), {pUserName : vUserName, pSourceName : vSourceName, pTargetName : vTargetName})}</p>
+			let vFlavor = `	<p>${Translate("ChatMessages.ObjectTransfer." + pInfos.ObjectType + "." + (pInfos.NoDelete ? "NoDelete" : "Delete"), {UserName : vUserName, SourceName : vSourceName, TargetName : vTargetName})}</p>
 							<div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:1em">
 								<img src="${pObject.img}" style = "height: 2em;">
 								<p>${pObject.name}</p>
@@ -153,7 +156,7 @@ class ItemDropManager {
 	
 	//ons
 	static async onCanvasDrop(pInfos) {
-		if (!game.user.isGM || true) { //not necessary for GMs
+		if (game.user.isGM || (game.settings.get(cModuleName, "allowPlayerItemTransfer") != "no")) { //not necessary for GMs
 			if (cValidDropTypes.includes(pInfos.type)) {
 				let vTargetToken = Dropletutils.TokenatPosition(pInfos);
 				
@@ -177,6 +180,6 @@ class ItemDropManager {
 	}
 }
 
-Hooks.on("dropCanvasData", (pTarget, pInfos) => {console.log(pInfos); ItemDropManager.onCanvasDrop(pInfos)});
+Hooks.on("dropCanvasData", (pTarget, pInfos) => {ItemDropManager.onCanvasDrop(pInfos)});
 
 export function TransferRequest(pData) {ItemDropManager.TransferRequest(pData)};

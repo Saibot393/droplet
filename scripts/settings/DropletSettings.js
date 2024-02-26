@@ -10,4 +10,29 @@ Hooks.once("init", () => {  // game.settings.get(cModuleName, "")
 	type: Boolean,
 	default: true
   }); 
+  
+  game.settings.register(cModuleName, "allowPlayerItemTransfer", {
+	name: Translate("Settings.allowPlayerItemTransfer.name"),
+	hint: Translate("Settings.allowPlayerItemTransfer.descrp"),
+	scope: "world",
+	config: true,
+	type: String,
+	choices: {
+		"no" : Translate("Settings.allowPlayerItemTransfer.options.no"),
+		"ownedonly" : Translate("Settings.allowPlayerItemTransfer.options.ownedonly"),
+		"playersonly" : Translate("Settings.allowPlayerItemTransfer.options.playersonly"),
+		"friendlies" : Translate("Settings.allowPlayerItemTransfer.options.friendliesonly"),
+		"neutrals" : Translate("Settings.allowPlayerItemTransfer.options.neutrals")
+	},
+	default: "playersonly"
+  }); 
+  
+  game.settings.register(cModuleName, "deleteItemonTransfer", {
+	name: Translate("Settings.deleteItemonTransfer.name"),
+	hint: Translate("Settings.deleteItemonTransfer.descrp"),
+	scope: "world",
+	config: true,
+	type: Boolean,
+	default: true
+  }); 
 });
