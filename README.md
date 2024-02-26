@@ -11,3 +11,11 @@ A few settings can be made:
 
 ## Scene drag & drop
 This allows the GM to quickly transfer players from one scene to another by dragging their name from the bottom left list to a scene in the nav bar at the top
+
+### Languages:
+
+The module contains an English, and a German translation. If you want additional languages to be supported [let me know](https://github.com/Saibot393/droplet/issues).
+
+---
+
+**If you have suggestions, questions, or requests for additional features please [let me know](https://github.com/Saibot393/droplet/issues).**
