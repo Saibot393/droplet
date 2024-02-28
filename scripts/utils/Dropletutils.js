@@ -9,6 +9,15 @@ class Dropletutils {
 	static validTarget(pToken) {} //returns if pToken is a valid drop target
 	
 	static validObject(pObject) {} //returns if pObject is a valid drop object
+	
+	//keyboard
+	static KeyisDown(pKeys) {} //returns if one of pKeys is pressed
+	
+	static functionKeys() {} //returns an object storing if any function keys are currently pressed
+	
+	//items
+	static deleteItem(pItem, pQuantity = -1) {} //deletes pItem from its owner actor (or reduces quantity if pQuantity is positive)
+	
 	//IMPLEMENTATIONS
 	static TokenatPosition(pPosition) {
 		let vToken = canvas.tokens.placeables.map(vToken => vToken.document);
@@ -31,6 +40,68 @@ class Dropletutils {
 	static validObject(pObject) {
 		return pObject.isOwner;
 	}
+	
+	//keyboard
+	static KeyisDown(pKeys) {
+		let vKeys = Array.isArray(pKeys) ? pKeys : [pKeys];
+		
+		switch(pKeys) {
+			case "ALT":
+				vKeys = ["AltLeft", "AltRight"];
+				break;
+			case "CTRL":
+				vKeys = ["ControlLeft", "ControlRight"];
+				break;
+			case "SHIFT":
+				vKeys = ["ShiftLeft", "ShiftRight"];
+				break;
+		}
+		
+		return vKeys.find(vKey => keyboard.downKeys.has(vKey));
+	}
+	
+	static functionKeys() {
+		let vKeys = {};
+		
+		for (let vkey of ["ALT", "CTRL", "SHIFT"]) {
+			vKeys[vkey] = Dropletutils.KeyisDown(vkey);
+		}
+		
+		return vKeys;
+	}
+	
+	//items
+	static deleteItem(pItem, pQuantity = -1) {
+		let vActor = pItem?.actor;
+		
+		if (vActor) {
+			if (pQuantity < 0) {
+				let vprevQuantity = pItem.system.quantity;
+				
+				vActor.deleteEmbeddedDocuments(pItem.documentName, [pItem.id]);
+				
+				return vprevQuantity;
+			}
+			
+			if (pQuantity > 0) {
+				let vprevQuantity = pItem.system.quantity;
+				
+				let vdeleteQuantity = Math.min(vprevQuantity, pQuantity);
+				
+				if (vdeleteQuantity == vprevQuantity) {
+					//all items removed => delete
+					vActor.deleteEmbeddedDocuments(pItem.documentName, [pItem.id]);
+				}
+				else {
+					pItem.update({system : {quantity : vprevQuantity - vdeleteQuantity}});
+				}
+				
+				return vdeleteQuantity;
+			}
+			
+			return 0;
+		}
+	} 
 }
 
 //for view switching

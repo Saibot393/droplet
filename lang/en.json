@@ -1,5 +1,14 @@
 {
 	"droplet" : {
+		"Titles" : {
+			"Transfer"						: "Transfer",
+			"Amount"						: "Amount",
+			"All"							: "All",
+			
+			"accept"						: "Accept",
+			"abbort"						: "Cancel"
+		},
+		
 		"ChatMessages" : {
 			"ObjectTransfer" : {
 				"Item" : {
@@ -29,7 +38,17 @@
 			
 			"deleteItemonTransfer" : {
 				"name"						: "Delete item on transfer",
-				"descrp"					: "If item dragged and dropped from a nother inventory should be destroyed in the source inventory"
+				"descrp"					: "If item dragged and dropped from a nother inventory should be destroyed in the source inventory [press ALT to invert]"
+			},
+			
+			"askTransferArmount" : {
+				"name"						: "Ask for transfer amount",
+				"descrp"					: "If transfering more than one item should open a menu to set the amount [press CTRL to invert]"
+			},
+			
+			"applySheetDrop" : {
+				"name"						: "Apply settings to sheet drops",
+				"descrp"					: "If the above settings should be applied to actor sheet drops"
 			}
 		}
 	}

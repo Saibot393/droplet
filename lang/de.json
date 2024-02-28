@@ -1,5 +1,14 @@
 {
 	"droplet" : {
+		"Titles" : {
+			"Transfer"						: "Transfer",
+			"Amount"						: "Menge",
+			"All"							: "Alles",
+			
+			"accept"						: "Akzeptieren",
+			"abbort"						: "Abbrechen"
+		},
+		
 		"ChatMessages" : {
 			"ObjectTransfer" : {
 				"Item" : {
@@ -30,6 +39,16 @@
 			"deleteItemonTransfer" : {
 				"name"						: "Gegenstände beim Transfer löschen",
 				"descrp"					: "Ob Gegenstände welche von einem Inventar in ein anderes transferiert werden im Ursprungsinventar gelöscht werden sollen"
+			},
+			
+			"askTransferArmount" : {
+				"name"						: "Transfermenge erfragen",
+				"descrp"					: "Ob beim Transfer von mehr als einem Gegenstand die Menge erfragt werden soll [STRG zu drücken invertiert diese Einstellung]"
+			},
+			
+			"applySheetDrop" : {
+				"name"						: "EInstellungen auf Bogen Drops anwenden",
+				"descrp"					: "Ob die oberen Einstellungen auch für Drops auf Charakterbögen angewandt werden sollen"
 			}
 		}
 	}

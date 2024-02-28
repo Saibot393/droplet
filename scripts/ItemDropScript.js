@@ -1,4 +1,5 @@
 import {cModuleName, Dropletutils, Translate} from "./utils/Dropletutils.js";
+import {openNewInput} from "./helpers/popupInput.js";
 
 const cValidDropTypes = ["Item", "ActiveEffect"];
 const cNoDeleteTypes = ["ActiveEffect"];
@@ -11,13 +12,17 @@ class ItemDropManager {
 	
 	static async TransferRequest(pData) {} //answers a transfere request (GM only)
 	
-	static TransferObjectGM(pSource, pTarget, pTransferObjects, pInfos) {} //transfers an object from pSource to pTarget
+	static async TransferObjectGM(pSource, pTarget, pTransferObjects, pInfos) {} //transfers an object from pSource to pTarget
+	
+	static async manageTransferDeletion(pItem, pKeys, pAmount = undefined) {} //manages the delete step of transfer events (and uses the pkey press dependent rules)
 	
 	//ui
-	static createTransferMessage(pUserID, pObject, pSource, pTarget) {} 
+	static createTransferMessage(pUserID, pObject, pSource, pTarget, pAmount = undefined) {} 
 	
 	//ons
 	static onCanvasDrop(pInfos) {} //called when something is dropped on the canvas
+	
+	static onSheetDrop(pTargetActor, pData) {} //called when an item is droped on an item sheet
 	
 	//IMPLEMENTATIONS
 	static InitiateTransfer(pObject, pTarget, vOptions) {
@@ -29,6 +34,8 @@ class ItemDropManager {
 	}
 	
 	static RequestTransfer(pSource, pTarget, pTransferObjects, vOptions) {
+		if (pSource == pTarget) return;
+		
 		if (game.user.isGM) {
 			let vInfos = {};
 			
@@ -92,7 +99,7 @@ class ItemDropManager {
 		}
 	}
 	
-	static TransferObjectGM(pSource, pTarget, pTransferObjects, pInfos) {
+	static async TransferObjectGM(pSource, pTarget, pTransferObjects, pInfos) {
 		if (game.user.isGM) {
 			if (pTarget && pTransferObjects.find(vObject => vObject)) {
 				for (let vObject of pTransferObjects.filter(vObject => vObject)) {
@@ -114,21 +121,22 @@ class ItemDropManager {
 						const cNoDelete = !vSourceActor || cNoDeleteTypes.includes(vObjectType);
 						
 						if (vTargetActor) {
-						
 							let vCopy = duplicate(vObject);
-							 
-							vTargetActor.createEmbeddedDocuments(vObjectType, [vCopy]);
 							
-							if (vSourceActor && !cNoDelete) {
-								if (game.settings.get(cModuleName, "deleteItemonTransfer")) {
-									vSourceActor.deleteEmbeddedDocuments(vObjectType, [vObject.id]);
-								}
+							let vAmount = vCopy.system.quantity;
+							
+							if (vSourceActor) {
+								vAmount = await ItemDropManager.manageTransferDeletion(vObject, pInfos.options.keys, pInfos.options.amount);
 							}
+							
+							vCopy.system.quantity = vAmount;
+							
+							vTargetActor.createEmbeddedDocuments(vObjectType, [vCopy]);
 							
 							let vInfos = {NoDelete : cNoDelete, ObjectType : vObjectType};
 							
 							if (game.settings.get(cModuleName, "TransferChatMessage")) {
-								ItemDropManager.createTransferMessage(pInfos.userID, vCopy, vSourceActor, vTargetActor, vInfos);
+								ItemDropManager.createTransferMessage(pInfos.userID, vCopy, vSourceActor, vTargetActor, vInfos, vAmount);
 							}
 						}
 					}
@@ -137,8 +145,32 @@ class ItemDropManager {
 		}
 	}
 	
+	static async manageTransferDeletion(pItem, pKeys, pAmount = undefined) {
+		if (pItem) {
+			let vRequestAmount = (pAmount == undefined) && pItem.system?.quantity > 1 && Boolean(game.settings.get(cModuleName, "askTransferAmount") ^ Boolean(pKeys.CTRL));
+			let vDeleteOrigin = pItem.actor && Boolean(game.settings.get(cModuleName, "deleteItemonTransfer") ^ Boolean(pKeys.ALT));
+			
+			let vAmount = pAmount ?? -1;
+			
+			if (vRequestAmount) {
+				vAmount = await openNewInput("range", Translate("Titles.Transfer"), Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : pItem.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(pItem.system.quantity/2), min : 0, step : 1, max : pItem.system.quantity});
+			}
+			
+			if (vAmount != 0 && vDeleteOrigin) {
+				vAmount = Dropletutils.deleteItem(pItem, vAmount);
+			}
+			else {
+				if (vAmount < 0) {
+					vAmount = pItem.system.quantity;
+				}
+			}
+			
+			return vAmount;
+		}
+	}
+	
 	//ui
-	static createTransferMessage(pUserID, pObject, pSource, pTarget, pInfos) {
+	static createTransferMessage(pUserID, pObject, pSource, pTarget, pInfos, pAmount = undefined) {
 		if (pObject && pTarget) {
 			let vUserName = game.users.get(pUserID).name;
 			let vSourceName = pSource?.name;
@@ -146,6 +178,7 @@ class ItemDropManager {
 			
 			let vFlavor = `	<p>${Translate("ChatMessages.ObjectTransfer." + pInfos.ObjectType + "." + (pInfos.NoDelete ? "NoDelete" : "Delete"), {UserName : vUserName, SourceName : vSourceName, TargetName : vTargetName})}</p>
 							<div class="form-group" style="display:flex;flex-direction:row;align-items:center;gap:1em">
+								<p>${pAmount && pAmount > 1 ? "(" + pAmount + "*)" : ""}</p>
 								<img src="${pObject.img}" style = "height: 2em;">
 								<p>${pObject.name}</p>
 							</div>`;
@@ -172,14 +205,62 @@ class ItemDropManager {
 					}
 				}
 				
-				let vOptions = {};
+				let vAmount;
+				let vKeys = Dropletutils.functionKeys();
+				
+				if (vObject.system?.quantity > 1 && Boolean(game.settings.get(cModuleName, "askTransferAmount") ^ Boolean(vKeys.CTRL))) {
+					vAmount = await openNewInput("range", Translate("Titles.Transfer"), Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : vObject.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(vObject.system.quantity/2), min : 0, step : 1, max : vObject.system.quantity});
+					console.log(vAmount);
+				}
+				
+				let vOptions = {keys : vKeys, amount : vAmount};
 				
 				ItemDropManager.InitiateTransfer(vObject, vTargetToken, vOptions);
 			}
 		}
 	}
+	
+	static onSheetDrop(pTargetActor, pData) {
+		if (game.settings.get(cModuleName, "applytoSheetDrop")) {
+			let vUpdateHook;
+			let vCreateHook;
+		
+			let vCall = async () => {
+				Hooks.off("updateItem", vUpdateHook);
+				Hooks.off("createItem", vCreateHook);
+				
+				let vKeys = Dropletutils.functionKeys();
+				
+				if (pTargetActor.isOwner) {
+					if (pData.type == "Item") {
+						let vSourceItem = await fromUuid(pData.uuid);
+						
+						if (vSourceItem) {
+							let vSourceID = vSourceItem.getFlag("core", "sourceId");
+							let vSourceAmount = vSourceItem.system.quantity;
+							
+							let vTargetItem = pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
+							
+							let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys);
+							
+							if (vTargetItem && (vSourceAmount != vTransfered)) {
+								//fix amount of transfered items
+								vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
+							}
+						}
+					}
+				}
+			}
+			
+			//wait for update/creation of new item
+			vUpdateHook = Hooks.once("updateItem", vCall);
+			vCreateHook = Hooks.once("createItem", vCall);
+		}
+	}
 }
 
 Hooks.on("dropCanvasData", (pTarget, pInfos) => {ItemDropManager.onCanvasDrop(pInfos)});
+
+Hooks.on("dropActorSheetData", (pTargetActor, pTargetSheet, pData) => {ItemDropManager.onSheetDrop(pTargetActor, pData)});
 
 export function TransferRequest(pData) {ItemDropManager.TransferRequest(pData)};

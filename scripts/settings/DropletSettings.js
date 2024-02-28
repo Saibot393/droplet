@@ -35,4 +35,22 @@ Hooks.once("init", () => {  // game.settings.get(cModuleName, "")
 	type: Boolean,
 	default: true
   }); 
+  
+  game.settings.register(cModuleName, "askTransferAmount", {
+	name: Translate("Settings.askTransferAmount.name"),
+	hint: Translate("Settings.askTransferAmount.descrp"),
+	scope: "world",
+	config: true,
+	type: Boolean,
+	default: true
+  }); 
+  
+  game.settings.register(cModuleName, "applytoSheetDrop", {
+	name: Translate("Settings.applytoSheetDrop.name"),
+	hint: Translate("Settings.applytoSheetDrop.descrp"),
+	scope: "world",
+	config: true,
+	type: Boolean,
+	default: true
+  }); 
 });
