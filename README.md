@@ -7,7 +7,9 @@ Allows GMs and players to drag & drop items onto tokens to directly transfer the
 A few settings can be adjusted:
 - Show transfer in chat: if a chat message should be created, containing the transfer details
 - Allow player item transfer: to set the rules under which players can transfer items
-- Delete item on transfer: if items should be deleted when transfered from one inventory to another
+- Delete item on transfer: if items should be deleted when transfered from one inventory to another (can be inverted by holding ALT)
+- Ask for transfer amount: to open a dialog which allows for the amount of transfered items to be set (can be inverted by holding CTRL)
+- Apply settings to sheet drops: to apply all settings to character sheet drops
 
 ## Scene drag & drop
 This allows the GM to quickly transfer players from one scene to another by dragging their name from the bottom left list to a scene in the nav bar at the top
