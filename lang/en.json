@@ -41,12 +41,12 @@
 				"descrp"					: "If item dragged and dropped from a nother inventory should be destroyed in the source inventory [press ALT to invert]"
 			},
 			
-			"askTransferArmount" : {
+			"askTransferAmount" : {
 				"name"						: "Ask for transfer amount",
 				"descrp"					: "If transfering more than one item should open a menu to set the amount [press CTRL to invert]"
 			},
 			
-			"applySheetDrop" : {
+			"applytoSheetDrop" : {
 				"name"						: "Apply settings to sheet drops",
 				"descrp"					: "If the above settings should be applied to actor sheet drops"
 			}

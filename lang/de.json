@@ -41,12 +41,12 @@
 				"descrp"					: "Ob Gegenstände welche von einem Inventar in ein anderes transferiert werden im Ursprungsinventar gelöscht werden sollen"
 			},
 			
-			"askTransferArmount" : {
+			"askTransferAmount" : {
 				"name"						: "Transfermenge erfragen",
 				"descrp"					: "Ob beim Transfer von mehr als einem Gegenstand die Menge erfragt werden soll [STRG zu drücken invertiert diese Einstellung]"
 			},
 			
-			"applySheetDrop" : {
+			"applytoSheetDrop" : {
 				"name"						: "EInstellungen auf Bogen Drops anwenden",
 				"descrp"					: "Ob die oberen Einstellungen auch für Drops auf Charakterbögen angewandt werden sollen"
 			}
