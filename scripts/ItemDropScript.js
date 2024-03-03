@@ -236,16 +236,18 @@ class ItemDropManager {
 						let vSourceItem = await fromUuid(pData.uuid);
 						
 						if (vSourceItem) {
-							let vSourceID = vSourceItem.getFlag("core", "sourceId");
-							let vSourceAmount = vSourceItem.system.quantity;
-							
-							let vTargetItem = pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
-							
-							let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys);
-							
-							if (vTargetItem && (vSourceAmount != vTransfered)) {
-								//fix amount of transfered items
-								vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
+							if (vSourceItem.actor && (vSourceItem.actor != pTargetActor)) {
+								let vSourceID = vSourceItem.getFlag("core", "sourceId");
+								let vSourceAmount = vSourceItem.system.quantity;
+								
+								let vTargetItem = pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
+								
+								let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys);
+								
+								if (vTargetItem && (vSourceAmount != vTransfered)) {
+									//fix amount of transfered items
+									vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
+								}
 							}
 						}
 					}
