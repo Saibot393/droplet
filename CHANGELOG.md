@@ -1,3 +1,6 @@
+## v2.0.0
+- v12 Compatibility
+
 ## v1.1.1
 - Bug fix for sheet drops
 
