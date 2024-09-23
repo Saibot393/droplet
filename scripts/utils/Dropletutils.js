@@ -18,6 +18,8 @@ class Dropletutils {
 	//items
 	static deleteItem(pItem, pQuantity = -1) {} //deletes pItem from its owner actor (or reduces quantity if pQuantity is positive)
 	
+	static containerContent(pContainer) {} //returns potential container content of pContainer
+	
 	//IMPLEMENTATIONS
 	static TokenatPosition(pPosition) {
 		let vToken = canvas.tokens.placeables.map(vToken => vToken.document);
@@ -75,6 +77,11 @@ class Dropletutils {
 		let vActor = pItem?.actor;
 		
 		if (vActor) {
+			let vContent = Dropletutils.containerContent(pItem);
+			if (vContent?.length) {
+				vContent.forEach(vItem => Dropletutils.deleteItem(vItem));
+			}
+			
 			if (pQuantity < 0) {
 				let vprevQuantity = pItem.system.quantity;
 				
@@ -102,6 +109,24 @@ class Dropletutils {
 			return 0;
 		}
 	} 
+	
+	static containerContent(pContainer) {
+		if (pContainer) {
+			if (pContainer.system?.contents) {
+				return pContainer.system.contents.contents;
+			}
+			
+			if (pContainer.system?.container?.contents) {
+				return pContainer.system.container.contents.contents;
+			}
+			
+			if (pContainer.contents) {
+				return pContainer.contents.contents;
+			}
+		}
+		
+		return false;
+	}
 }
 
 //for view switching
