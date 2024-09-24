@@ -47,6 +47,11 @@
 				"descrp"					: "Ob beim Transfer von mehr als einem Gegenstand die Menge erfragt werden soll [STRG zu drücken invertiert diese Einstellung]"
 			},
 			
+			"transferZeros" : {
+				"name"						: "Null transferieren",
+				"descrp"					: "Ob das transferieren von 0 Gegenständen einen Gegenstand mit Quantität 0 erstellen soll"
+			},
+			
 			"applytoSheetDrop" : {
 				"name"						: "EInstellungen auf Bogen Drops anwenden",
 				"descrp"					: "Ob die oberen Einstellungen auch für Drops auf Charakterbögen angewandt werden sollen"

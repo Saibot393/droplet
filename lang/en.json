@@ -47,6 +47,11 @@
 				"descrp"					: "If transfering more than one item should open a menu to set the amount [press CTRL to invert]"
 			},
 			
+			"transferZeros" : {
+				"name"						: "Transfer zeros",
+				"descrp"					: "If transfering 0 items should create an item with quantity 0"
+			},
+			
 			"applytoSheetDrop" : {
 				"name"						: "Apply settings to sheet drops",
 				"descrp"					: "If the above settings should be applied to actor sheet drops"
