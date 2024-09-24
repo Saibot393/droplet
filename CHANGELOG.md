@@ -1,3 +1,6 @@
+## v2.0.1
+- Small bug fix for containers
+
 ## v2.0.0
 - v12 Compatibility
 
