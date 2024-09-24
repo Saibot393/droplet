@@ -9,6 +9,7 @@ A few settings can be adjusted:
 - Allow player item transfer: to set the rules under which players can transfer items
 - Delete item on transfer: if items should be deleted when transfered from one inventory to another (can be inverted by holding ALT)
 - Ask for transfer amount: to open a dialog which allows for the amount of transfered items to be set (can be inverted by holding CTRL)
+- Transfer zeros: to set wether transfering 0 items should create a item with quantity 0
 - Apply settings to sheet drops: to apply all settings to character sheet drops
 
 ## Scene drag & drop
