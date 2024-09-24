@@ -45,6 +45,15 @@ Hooks.once("init", () => {  // game.settings.get(cModuleName, "")
 	default: true
   }); 
   
+  game.settings.register(cModuleName, "transferZeros", {
+	name: Translate("Settings.transferZeros.name"),
+	hint: Translate("Settings.transferZeros.descrp"),
+	scope: "world",
+	config: true,
+	type: Boolean,
+	default: true
+  }); 
+  
   game.settings.register(cModuleName, "applytoSheetDrop", {
 	name: Translate("Settings.applytoSheetDrop.name"),
 	hint: Translate("Settings.applytoSheetDrop.descrp"),

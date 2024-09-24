@@ -153,7 +153,13 @@ class ItemDropManager {
 			let vAmount = pAmount ?? -1;
 			
 			if (vRequestAmount) {
-				vAmount = await openNewInput("range", Translate("Titles.Transfer"), Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : pItem.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(pItem.system.quantity/2), min : 0, step : 1, max : pItem.system.quantity});
+				let vTitle = vDeleteOrigin ? Translate("Titles.Transfer") : Translate("Titles.Duplicate");
+				
+				vAmount = await openNewInput("range", vTitle, Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : pItem.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(pItem.system.quantity/2), min : 0, step : 1, max : pItem.system.quantity});
+				
+				if (vAmount == undefined) {
+					vAmount = 0;
+				}
 			}
 			
 			if (vAmount != 0 && vDeleteOrigin) {
@@ -210,12 +216,13 @@ class ItemDropManager {
 				
 				if (vObject.system?.quantity > 1 && Boolean(game.settings.get(cModuleName, "askTransferAmount") ^ Boolean(vKeys.CTRL))) {
 					vAmount = await openNewInput("range", Translate("Titles.Transfer"), Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : vObject.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(vObject.system.quantity/2), min : 0, step : 1, max : vObject.system.quantity});
-					console.log(vAmount);
 				}
 				
-				let vOptions = {keys : vKeys, amount : vAmount};
-				
-				ItemDropManager.InitiateTransfer(vObject, vTargetToken, vOptions);
+				if (vAmount > 0 || game.settings.get(cModuleName, "transferZeros")) {
+					let vOptions = {keys : vKeys, amount : vAmount};
+					
+					ItemDropManager.InitiateTransfer(vObject, vTargetToken, vOptions);
+				}
 			}
 		}
 	}
@@ -246,7 +253,12 @@ class ItemDropManager {
 								
 								if (vTargetItem && (vSourceAmount != vTransfered)) {
 									//fix amount of transfered items
-									vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
+									if (vTransfered > 0 || game.settings.get(cModuleName, "transferZeros")) {
+										vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
+									}
+									else {
+										pTargetActor.deleteEmbeddedDocuments(vTargetItem.documentName, [vTargetItem.id]);
+									}
 								}
 							}
 						}
