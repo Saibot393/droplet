@@ -1,4 +1,4 @@
-## 2.1.0
+## v2.1.0
 - Closing a transfer window will now transfer 0 items (instead of all)
 - Transfering items without destroying them will now cause the amount window to be titled as "Duplicate" instead of "Transfer"
 - Added setting Transfer zeros to set wether transfering 0 items should create a item with quantity 0
