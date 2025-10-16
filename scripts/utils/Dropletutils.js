@@ -59,7 +59,7 @@ class Dropletutils {
 				break;
 		}
 		
-		return vKeys.find(vKey => keyboard.downKeys.has(vKey));
+		return vKeys.find(vKey => game.keyboard.downKeys.has(vKey));
 	}
 	
 	static functionKeys() {
