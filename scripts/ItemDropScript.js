@@ -161,7 +161,7 @@ class ItemDropManager {
 					vAmount = 0;
 				}
 			}
-			
+
 			if (vAmount != 0 && vDeleteOrigin) {
 				vAmount = Dropletutils.deleteItem(pItem, vAmount);
 			}
@@ -232,7 +232,7 @@ class ItemDropManager {
 			let vUpdateHook;
 			let vCreateHook;
 		
-			let vCall = async () => {
+			let vCall = async (pTargetItem) => {
 				Hooks.off("updateItem", vUpdateHook);
 				Hooks.off("createItem", vCreateHook);
 				
@@ -247,17 +247,28 @@ class ItemDropManager {
 								let vSourceID = vSourceItem.getFlag("core", "sourceId");
 								let vSourceAmount = vSourceItem.system.quantity;
 								
-								let vTargetItem = pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
+								let vTargetItem = pTargetItem || pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
 								
 								let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys);
-								
+
 								if (vTargetItem && (vSourceAmount != vTransfered)) {
 									//fix amount of transfered items
-									if (vTransfered > 0 || game.settings.get(cModuleName, "transferZeros")) {
+									if (vTransfered > 0 || game.settings.get(cModuleName, "transferZeros") || (vTargetItem.system.quantity > vSourceAmount)) {
 										vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
 									}
 									else {
 										pTargetActor.deleteEmbeddedDocuments(vTargetItem.documentName, [vTargetItem.id]);
+									}
+								}
+								
+								if (vTransfered < vSourceAmount) {//catch a preimplemented system transfer case (e.g. shift in d&d5e)
+									let vSourceActor = vSourceItem.parent;
+								
+									if (vSourceActor && !vSourceActor.items.find(vItem => vItem.id == vSourceItem.id)) {
+										//recreate source item
+										let vCopy = duplicate(vSourceItem);
+										vCopy.system.quantity = vSourceAmount - vTransfered;
+										vSourceActor.createEmbeddedDocuments(vSourceItem.documentName, [vCopy]);
 									}
 								}
 							}

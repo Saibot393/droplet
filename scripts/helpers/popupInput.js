@@ -70,14 +70,27 @@ async function openNewInput(type, title, question, options = {}) {
 	
 	dialog.render(true);
 	
-	await timeout(50);
+	while (!dialog.rendered) await timeout(50);
 	
 	if (type == "range") {
-		let inputElement = dialog.element[0].querySelector("#inputresult");
-		let inputDisplay = dialog.element[0].querySelector("#inputdisplay");
-	
-		inputElement.onchange = () => {inputDisplay.value = inputElement.value;};
-		inputElement.onchange();
+		let inputElement;
+		let inputDisplay;
+		
+		if (game.release.generation < 13) {
+			inputElement = dialog.element[0].querySelector("#inputresult");
+			inputDisplay = dialog.element[0].querySelector("#inputdisplay");	
+			
+			inputElement.onchange = () => {inputDisplay.value = inputElement.value};
+			inputElement.onchange();
+		}
+		else {
+			inputElement = dialog.element.find("#inputresult");
+			inputDisplay = dialog.element.find("#inputdisplay");
+
+			inputElement.on("change",() => {inputDisplay.val(Number(inputElement.val()))});
+			inputDisplay.val(Number(inputElement.val()));
+		}
+
 	}
 	
 	await timeout(50); //give window time to render
