@@ -2,7 +2,7 @@ import {cModuleName, Dropletutils, switchScene, Translate} from "./utils/Droplet
 
 let vDraggedPlayer;
 
-class ItemDropManager {
+class PlayerDropManager {
 	//DECLARATIONS
 	static onPlayerdrag(pPlayerID) {} //called when a player name is draggedplayer
 	
@@ -37,32 +37,53 @@ class ItemDropManager {
 	}
 }
 
-
-Hooks.on("renderPlayerList", () => {
+function preparePlayerList() {
 	if (game.user.isGM) {
-		let vPlayerEntries = ui.players._element[0].querySelectorAll(".player");
+		let vPlayerEntries;
+				
+		if (game.release.generation < 13) {
+			vPlayerEntries = ui.players._element[0].querySelectorAll(".player");
+		}
+		else {
+			vPlayerEntries = ui.players.element.querySelectorAll(".player");
+		}
 		
 		for (let i = 0; i < vPlayerEntries.length; i++) {
 			vPlayerEntries[i].draggable = true;
 			
 			vPlayerEntries[i].ondrag = (event) => {
-				ItemDropManager.onPlayerdrag(vPlayerEntries[i].getAttribute("data-user-id"));
+				PlayerDropManager.onPlayerdrag(vPlayerEntries[i].getAttribute("data-user-id"));
 			};
 			
 			vPlayerEntries[i].ondragend = (event) => {
-				ItemDropManager.onPlayerdragend(vPlayerEntries[i].getAttribute("data-user-id"));
+				PlayerDropManager.onPlayerdragend(vPlayerEntries[i].getAttribute("data-user-id"));
 			};
 		}
 	}
+}
+
+Hooks.on("renderPlayerList", () => {
+	preparePlayerList();
+});
+
+Hooks.on("renderPlayers", () => {
+	preparePlayerList();
 });
 
 Hooks.on("renderSceneNavigation", () => {
 	if (game.user.isGM) {
-		let vSceneEntries = ui.nav._element[0].querySelectorAll("li.nav-item");
+		let vSceneEntries;
+
+		if (game.release.generation < 13) {
+			vSceneEntries = ui.nav._element[0].querySelectorAll("li.nav-item");
+		}
+		else {
+			vSceneEntries = ui.nav.element.querySelectorAll("li.scene");
+		}
 		
 		for (let i = 0; i < vSceneEntries.length; i++) {
 			vSceneEntries[i].ondrop = (event) => {
-				ItemDropManager.onScenedrop(vSceneEntries[i].getAttribute("data-scene-id"));
+				PlayerDropManager.onScenedrop(vSceneEntries[i].getAttribute("data-scene-id"));
 			};
 		}
 	}
