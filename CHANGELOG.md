@@ -1,3 +1,6 @@
+## v2.1.2
+- Fix for player scene dopping in v13
+
 ## v2.1.1
 - small v13 fix
 
