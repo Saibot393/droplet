@@ -1,3 +1,7 @@
+## v2.1.3
+- Improved logic
+- Improved system compatibility
+
 ## v2.1.2
 - Fix for player scene dopping in v13
 
