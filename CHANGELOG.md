@@ -1,3 +1,6 @@
+## v2.1.4
+- Fix for dungeon crawl classic system specific bug
+
 ## v2.1.3
 - Improved logic
 - Improved system compatibility
