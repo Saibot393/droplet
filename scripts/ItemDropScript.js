@@ -14,7 +14,7 @@ class ItemDropManager {
 	
 	static async TransferObjectGM(pSource, pTarget, pTransferObjects, pInfos) {} //transfers an object from pSource to pTarget
 	
-	static async manageTransferDeletion(pItem, pKeys, pAmount = undefined) {} //manages the delete step of transfer events (and uses the pkey press dependent rules)
+	static async manageTransferDeletion(pItem, pKeys, pAmount = undefined, pCheckDropSavety = false) {} //manages the delete step of transfer events (and uses the pkey press dependent rules)
 	
 	//ui
 	static createTransferMessage(pUserID, pObject, pSource, pTarget, pAmount = undefined) {} 
@@ -145,11 +145,11 @@ class ItemDropManager {
 		}
 	}
 	
-	static async manageTransferDeletion(pItem, pKeys, pAmount = undefined) {
+	static async manageTransferDeletion(pItem, pKeys, pAmount = undefined, pCheckDropSavety = false) {
 		if (pItem) {
 			let vRequestAmount = (pAmount == undefined) && pItem.system?.quantity > 1 && Boolean(game.settings.get(cModuleName, "askTransferAmount") ^ Boolean(pKeys.CTRL));
 			let vDeleteOrigin = pItem.actor && Boolean(game.settings.get(cModuleName, "deleteItemonTransfer") ^ Boolean(pKeys.ALT));
-			
+
 			let vAmount = pAmount ?? -1;
 			
 			if (vRequestAmount) {
@@ -163,7 +163,7 @@ class ItemDropManager {
 			}
 
 			if (vAmount != 0 && vDeleteOrigin) {
-				vAmount = Dropletutils.deleteItem(pItem, vAmount);
+				vAmount = Dropletutils.deleteItem(pItem, vAmount, pCheckDropSavety);
 			}
 			else {
 				if (vAmount < 0) {
@@ -245,11 +245,12 @@ class ItemDropManager {
 						if (vSourceItem) {
 							if (vSourceItem.actor && (vSourceItem.actor != pTargetActor)) {
 								let vSourceID = vSourceItem.getFlag("core", "sourceId");
+
 								let vSourceAmount = vSourceItem.system.quantity;
 								
 								let vTargetItem = pTargetItem || pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
 								
-								let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys);
+								let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys, undefined, true);
 
 								if (vTargetItem && (vSourceAmount != vTransfered)) {
 									//fix amount of transfered items

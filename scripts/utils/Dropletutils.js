@@ -1,4 +1,5 @@
 import {GeometricUtils} from "./GeometricUtils.js";
+import {systemutils} from "./systemutils.js";
 
 const cModuleName = "droplet";
 
@@ -16,7 +17,7 @@ class Dropletutils {
 	static functionKeys() {} //returns an object storing if any function keys are currently pressed
 	
 	//items
-	static deleteItem(pItem, pQuantity = -1) {} //deletes pItem from its owner actor (or reduces quantity if pQuantity is positive)
+	static deleteItem(pItem, pQuantity = -1, pCheckDropSavety = false) {} //deletes pItem from its owner actor (or reduces quantity if pQuantity is positive), pCheckDropSavety actiivates system specific savety checks
 	
 	static containerContent(pContainer) {} //returns potential container content of pContainer
 	
@@ -73,27 +74,28 @@ class Dropletutils {
 	}
 	
 	//items
-	static deleteItem(pItem, pQuantity = -1) {
+	static deleteItem(pItem, pQuantity = -1, pCheckDropSavety = false) {
 		let vActor = pItem?.actor;
 		
 		if (vActor) {
-			let vContent = Dropletutils.containerContent(pItem);
-			if (vContent?.length) {
-				vContent.forEach(vItem => Dropletutils.deleteItem(vItem));
+			let vprevQuantity = pItem.system.quantity;
+			let vQuantity = pQuantity;
+			
+			if (vQuantity < 0) {
+				vQuantity = vprevQuantity;
 			}
 			
-			if (pQuantity < 0) {
-				let vprevQuantity = pItem.system.quantity;
-				
-				vActor.deleteEmbeddedDocuments(pItem.documentName, [pItem.id]);
-				
-				return vprevQuantity;
+			if (pCheckDropSavety && !systemutils.savetodeleteonsheetdrop(pItem)) {
+				return Math.min(vprevQuantity, vQuantity);
 			}
 			
-			if (pQuantity > 0) {
-				let vprevQuantity = pItem.system.quantity;
+			if (vQuantity > 0) {
+				let vContent = Dropletutils.containerContent(pItem);
+				if (vContent?.length) {
+					vContent.forEach(vItem => Dropletutils.deleteItem(vItem));
+				}
 				
-				let vdeleteQuantity = Math.min(vprevQuantity, pQuantity);
+				let vdeleteQuantity = Math.min(vprevQuantity, vQuantity);
 				
 				if (vdeleteQuantity == vprevQuantity) {
 					//all items removed => delete
