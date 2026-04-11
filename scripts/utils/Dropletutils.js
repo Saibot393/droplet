@@ -7,7 +7,7 @@ class Dropletutils {
 	//DECLARATIONS
 	static TokenatPosition(pPosition) {} //returns token at position pPosition, if any
 	
-	static validTarget(pToken) {} //returns if pToken is a valid drop target
+	static validTarget(pObject) {} //returns if pToken (Token/Actor) is a valid drop target
 	
 	static validObject(pObject) {} //returns if pObject is a valid drop object
 	
@@ -25,18 +25,23 @@ class Dropletutils {
 	static TokenatPosition(pPosition) {
 		let vToken = canvas.tokens.placeables.map(vToken => vToken.document);
 		
-		return vToken.find(vToken => GeometricUtils.withinBoundaries(vToken, "TokenFormRectangle", [pPosition.x, pPosition.y]));
+		return vToken.find(vToken => GeometricUtils.withinBoundaries(vToken, "TokenFormRectangle", [pPosition.x, pPosition.y]) && vToken.object?.visible);
 	}
 	
-	static validTarget(pToken) {
+	static validTarget(pObject) {
 		if (game.user.isGM) return true;
 		
+		if (!["Token", "Actor"].includes(pObject?.documentName)) return false;
+		
+		let vActor = pObject.documentName == "Actor" ? pObject : pObject.actor;
+		let vToken = pObject.documentName == "Token" ? pObject : pObject.prototypeToken;
+
 		switch (game.settings.get(cModuleName, "allowPlayerItemTransfer")) {
 			case "no": return false;
-			case "ownedonly": return pToken.isOwner;
-			case "playersonly": return pToken.actor?.hasPlayerOwner;
-			case "friendlies": return pToken.disposition >= 1;
-			case "neutrals": return pToken.disposition >= 0;
+			case "ownedonly": return pObject.isOwner;
+			case "playersonly": return vActor?.hasPlayerOwner;
+			case "friendlies": return vToken?.disposition >= 1;
+			case "neutrals": return vToken?.disposition >= 0;
 		}
 	}
 	
@@ -132,11 +137,12 @@ class Dropletutils {
 }
 
 //for view switching
-async function switchScene( {pUserID, pSceneID, px, py} = {}) {
-	if ((game.user.id == pUserID) && (canvas.scene.id != pSceneID)) {
-		//change only if intended user and not already on target scene
-		
-		await game.scenes.get(pSceneID)?.view();
+async function switchScene( {pUserID, pSceneID, pLevelID, px, py} = {}) {
+	if ((game.user.id == pUserID) && (canvas.scene.id != pSceneID || (pLevelID && canvas.level?.id != pSceneID))) {
+		//change only if intended user and not already on target scene/level
+		let vOptions = {level : pLevelID};
+
+		await game.scenes.get(pSceneID)?.view(vOptions);
 		if (px != undefined && py != undefined) {
 			canvas.pan({ x: px, y: py });
 		}

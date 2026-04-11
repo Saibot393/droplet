@@ -10,6 +10,8 @@ class PlayerDropManager {
 
 	static onScenedrop(pSceneID) {} //called when something is dropped on a scene nav
 	
+	static onPlayerDrop(pPlayerID, pSceneID, pLevelID = undefined) {} //called when a player is dropped on a scene ui (nav or item)
+	
 	//IMPLEMENTATIONS
 	static onPlayerdrag(pPlayerID) {
 		if (vDraggedPlayer != pPlayerID) {
@@ -35,6 +37,19 @@ class PlayerDropManager {
 			}
 		}
 	}
+	
+	static onPlayerDrop(pPlayerID, pSceneID, pLevelID = undefined) {
+		if (pPlayerID && pSceneID) {
+			let vData = {pUserID : pPlayerID, pSceneID : pSceneID, pLevelID};
+			
+			if (game.user.id == pPlayerID) {
+				switchScene(vData);
+			}
+			else {
+				game.socket.emit("module.droplet", {pFunction : "switchScene", pData : vData});
+			}
+		}
+	}
 }
 
 function preparePlayerList() {
@@ -51,6 +66,15 @@ function preparePlayerList() {
 		for (let i = 0; i < vPlayerEntries.length; i++) {
 			vPlayerEntries[i].draggable = true;
 			
+			let vUserID = vPlayerEntries[i].getAttribute("data-user-id");
+			
+			vPlayerEntries[i].ondragstart = (pEvent) => {
+				pEvent.dataTransfer.setData("text/plain", JSON.stringify({
+					type : "User",
+					userID : vUserID
+				}));
+			}
+			/*
 			vPlayerEntries[i].ondrag = (event) => {
 				PlayerDropManager.onPlayerdrag(vPlayerEntries[i].getAttribute("data-user-id"));
 			};
@@ -58,6 +82,7 @@ function preparePlayerList() {
 			vPlayerEntries[i].ondragend = (event) => {
 				PlayerDropManager.onPlayerdragend(vPlayerEntries[i].getAttribute("data-user-id"));
 			};
+			*/
 		}
 	}
 }
@@ -82,9 +107,50 @@ Hooks.on("renderSceneNavigation", () => {
 		}
 		
 		for (let i = 0; i < vSceneEntries.length; i++) {
-			vSceneEntries[i].ondrop = (event) => {
-				PlayerDropManager.onScenedrop(vSceneEntries[i].getAttribute("data-scene-id"));
-			};
+			vSceneEntries[i].ondrop = (pEvent) => {
+				let vSceneID = vSceneEntries[i].getAttribute("data-scene-id");
+				
+				let vDropData = pEvent.dataTransfer.getData("text/plain") ? JSON.parse(pEvent.dataTransfer.getData("text/plain")) : undefined;
+
+				if (vDropData?.type == "User") {
+					PlayerDropManager.onPlayerDrop(vDropData.userID, vSceneID);
+				}
+			}
+		}
+		
+		if (game.release.generation >= 14) {
+			let vLevelEntries = ui.nav.element.querySelectorAll("div.scene-level");
+			
+			for (let i = 0; i < vLevelEntries.length; i++) {
+				vLevelEntries[i].ondrop = (pEvent) => {
+					let vSceneID = vLevelEntries[i].getAttribute("data-scene-id");
+					let vLevelID = vLevelEntries[i].getAttribute("data-level-id");
+					
+					let vDropData = pEvent.dataTransfer.getData("text/plain") ? JSON.parse(pEvent.dataTransfer.getData("text/plain")) : undefined;
+
+					if (vDropData?.type == "User") {
+						PlayerDropManager.onPlayerDrop(vDropData.userID, vSceneID, vLevelID);
+					}
+				}
+			}
+		}
+	}
+});
+
+Hooks.on("renderSceneDirectory", () => {
+	if (game.user.isGM && game.release.generation >= 13) {
+		let vSceneEntries = ui.scenes.element.querySelectorAll("li.scene");
+		
+		for (let i = 0; i < vSceneEntries.length; i++) {
+			vSceneEntries[i].ondrop = (pEvent) => {
+				let vSceneID = vSceneEntries[i].getAttribute("data-entry-id");
+				
+				let vDropData = pEvent.dataTransfer.getData("text/plain") ? JSON.parse(pEvent.dataTransfer.getData("text/plain")) : undefined;
+
+				if (vDropData?.type == "User") {
+					PlayerDropManager.onPlayerDrop(vDropData.userID, vSceneID);
+				}
+			}
 		}
 	}
 });

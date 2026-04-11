@@ -20,6 +20,8 @@ class ItemDropManager {
 	static createTransferMessage(pUserID, pObject, pSource, pTarget, pAmount = undefined) {} 
 	
 	//ons
+	static async onCustomDrop(pObject, pTarget, pOptions) {} //called by other custom on drops (canvas, actor, player)
+	
 	static onCanvasDrop(pInfos) {} //called when something is dropped on the canvas
 	
 	static onSheetDrop(pTargetActor, pData) {} //called when an item is droped on an item sheet
@@ -71,7 +73,7 @@ class ItemDropManager {
 			vData.userID = game.user.id;
 			
 			vData.options = vOptions;
-			
+
 			game.socket.emit("module.droplet", {pFunction : "TransferRequest", pData : vData});
 		}
 	}
@@ -121,7 +123,7 @@ class ItemDropManager {
 						const cNoDelete = !vSourceActor || cNoDeleteTypes.includes(vObjectType);
 						
 						if (vTargetActor) {
-							let vCopy = duplicate(vObject);
+							let vCopy = (foundry.utils?.duplicate || duplicate)(vObject);
 							
 							let vAmount = vCopy.system.quantity;
 							
@@ -161,6 +163,8 @@ class ItemDropManager {
 					vAmount = 0;
 				}
 			}
+			
+			vAmount = Math.min(vAmount, pItem.system.quantity);
 
 			if (vAmount != 0 && vDeleteOrigin) {
 				vAmount = Dropletutils.deleteItem(pItem, vAmount, pCheckDropSavety);
@@ -189,11 +193,33 @@ class ItemDropManager {
 								<p>${pObject.name}</p>
 							</div>`;
 			
-			ChatMessage.create({user: pUserID, flavor : vFlavor, type : 5}); //CHAT MESSAGE
+			ChatMessage.create({user: pUserID, flavor : vFlavor}); //CHAT MESSAGE
 		}
 	} 
 	
 	//ons
+	static async onCustomDrop(pObject, pTarget, pOptions = {}) {
+		if (game.user.isGM || (game.settings.get(cModuleName, "allowPlayerItemTransfer") != "no")) { //not necessary for GMs
+			if (cValidDropTypes.includes(pObject.documentName)) {
+				let vOptions = {...pOptions};
+				
+				if (!vOptions.hasOwnProperty("keys")) {
+					vOptions.keys = Dropletutils.functionKeys();
+				}
+				
+				if (!vOptions.hasOwnProperty("amount")) {
+					if (pObject.system?.quantity > 1 && Boolean(game.settings.get(cModuleName, "askTransferAmount") ^ Boolean(vOptions.keys?.CTRL))) {
+						vOptions.amount = await openNewInput("range", Translate("Titles.Transfer"), Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : pObject.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(pObject.system.quantity/2), min : 0, step : 1, max : pObject.system.quantity});
+					}
+				}
+				
+				if (vOptions.amount > 0 || game.settings.get(cModuleName, "transferZeros")) {
+					ItemDropManager.InitiateTransfer(pObject, pTarget, vOptions);
+				}
+			}
+		}
+	}
+	
 	static async onCanvasDrop(pInfos) {
 		if (game.user.isGM || (game.settings.get(cModuleName, "allowPlayerItemTransfer") != "no")) { //not necessary for GMs
 			if (cValidDropTypes.includes(pInfos.type)) {
@@ -211,6 +237,7 @@ class ItemDropManager {
 					}
 				}
 				
+				/*
 				let vAmount;
 				let vKeys = Dropletutils.functionKeys();
 				
@@ -223,6 +250,8 @@ class ItemDropManager {
 					
 					ItemDropManager.InitiateTransfer(vObject, vTargetToken, vOptions);
 				}
+				*/
+				ItemDropManager.onCustomDrop(vObject, vTargetToken);
 			}
 		}
 	}
@@ -267,7 +296,7 @@ class ItemDropManager {
 								
 									if (vSourceActor && !vSourceActor.items.find(vItem => vItem.id == vSourceItem.id)) {
 										//recreate source item
-										let vCopy = duplicate(vSourceItem);
+										let vCopy = (foundry.utils?.duplicate || duplicate)(vSourceItem);
 										vCopy.system.quantity = vSourceAmount - vTransfered;
 										vSourceActor.createEmbeddedDocuments(vSourceItem.documentName, [vCopy]);
 									}
@@ -288,5 +317,51 @@ class ItemDropManager {
 Hooks.on("dropCanvasData", (pTarget, pInfos) => {ItemDropManager.onCanvasDrop(pInfos)});
 
 Hooks.on("dropActorSheetData", (pTargetActor, pTargetSheet, pData) => {ItemDropManager.onSheetDrop(pTargetActor, pData)});
+
+Hooks.on("renderActorDirectory", () => {
+	if (game.release.generation >= 13) {
+		let vActorEntries = ui.actors.element.querySelectorAll("li.actor");
+
+		for (let i = 0; i < vActorEntries.length; i++) {
+			vActorEntries[i].ondrop = (pEvent) => {
+				let vDropData = pEvent.dataTransfer.getData("text/plain") ? JSON.parse(pEvent.dataTransfer.getData("text/plain")) : undefined;
+				
+				if (cValidDropTypes.includes(vDropData?.type)) {
+					let vObject = fromUuidSync(vDropData.uuid);
+					
+					let vActor = game.actors.get(vActorEntries[i].getAttribute("data-entry-id"));
+					
+					if (vObject && vActor) {
+						ItemDropManager.onCustomDrop(vObject, vActor)
+					}
+				}
+			}
+		}
+	}
+});
+
+Hooks.on("renderPlayers", () => {
+	if (game.release.generation >= 13) {
+		let vPlayerEntries = ui.players.element.querySelectorAll(".player");
+		
+		for (let i = 0; i < vPlayerEntries.length; i++) {
+			let vUserID = vPlayerEntries[i].getAttribute("data-user-id");
+			
+			vPlayerEntries[i].ondrop = (pEvent) => {
+				let vDropData = pEvent.dataTransfer.getData("text/plain") ? JSON.parse(pEvent.dataTransfer.getData("text/plain")) : undefined;
+								
+				if (cValidDropTypes.includes(vDropData?.type)) {
+					let vObject = fromUuidSync(vDropData.uuid);
+					
+					let vCharacter = game.users.get(vUserID)?.character;
+					
+					if (vObject && vCharacter) {
+						ItemDropManager.onCustomDrop(vObject, vCharacter)
+					}
+				}
+			}
+		}
+	}
+});
 
 export function TransferRequest(pData) {ItemDropManager.TransferRequest(pData)};
