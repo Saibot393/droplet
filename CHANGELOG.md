@@ -1,3 +1,10 @@
+## v3.0.0
+- v14 compatibility
+- GMs can now force users to specific levels by dropping their name on the level in the top left nav bar
+- GMs can now force users to scenes by dropping their name on the scene in the left scene directory
+- Users can now transfer items to actors by dropping the item on the actor in the left actor directory
+- Users can now transfer items to characters actors of other users by dropping the item on the user name at the bottom left
+
 ## v2.1.5
 - Added Brazilian Portuguese translation (thanks to [Paulo “Faren” Henrique](https://github.com/FarenRavirar))
 
