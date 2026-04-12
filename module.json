@@ -7,7 +7,7 @@
     "name": "saibot"
     }
   ],
-  "version": "3.0.0",
+  "version": "3.0.1",
   "compatibility": {
     "minimum": "11",
     "verified": "14"
@@ -40,7 +40,7 @@
 	"scripts/settings/DropletSettings.js"
   ],
   "url": "https://github.com/Saibot393/droplet",
-  "download": "https://github.com/Saibot393/droplet/archive/refs/tags/v3.0.0.zip",
+  "download": "https://github.com/Saibot393/droplet/archive/refs/tags/v3.0.1.zip",
   "manifest": "https://github.com/Saibot393/droplet/releases/latest/download/module.json",
   "readme": "https://github.com/Saibot393/droplet/blob/main/README.md",
   "changelog": "https://github.com/Saibot393/droplet/blob/main/CHANGELOG.md",

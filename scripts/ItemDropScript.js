@@ -209,7 +209,21 @@ class ItemDropManager {
 				
 				if (!vOptions.hasOwnProperty("amount")) {
 					if (pObject.system?.quantity > 1 && Boolean(game.settings.get(cModuleName, "askTransferAmount") ^ Boolean(vOptions.keys?.CTRL))) {
-						vOptions.amount = await openNewInput("range", Translate("Titles.Transfer"), Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : pObject.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(pObject.system.quantity/2), min : 0, step : 1, max : pObject.system.quantity});
+						let vSourceName = pObject.parent?.name;
+						let vTargetName = pTarget.name;
+						
+						let vTitle = Translate("Titles.Transfer");
+						
+						if (vTargetName) {
+							if (vSourceName) {
+								vTitle = Translate("Titles.Transferfromto", {from : vSourceName, to : vTargetName});
+							}
+							else {
+								vTitle = Translate("Titles.Transferto", {to : vTargetName});
+							}
+						}
+						
+						vOptions.amount = await openNewInput("range", vTitle, Translate("Titles.Amount"), {abbortName : Translate("Titles.All"), abbortValue : pObject.system.quantity, abbortIcon : "fa-solid fa-cubes-stacked", defaultValue : Math.floor(pObject.system.quantity/2), min : 0, step : 1, max : pObject.system.quantity});
 					}
 				}
 				

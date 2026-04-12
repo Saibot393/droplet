@@ -2,7 +2,10 @@
 	"droplet" : {
 		"Titles" : {
 			"Transfer"						: "Transfer",
+			"Tranferto"						: "Transfer zu {to}",
+			"Transferfromto"				: "Transfer von {from} zu {to}",
 			"Duplicate"						: "Duplizieren",
+			"Duplicatefromto"				: "Duplizieren von {from} zu {to}",
 			"Amount"						: "Menge",
 			"All"							: "Alles",
 			
