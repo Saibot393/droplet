@@ -1,3 +1,6 @@
+## v3.0.2
+- Improved pf2e item drop compatibility
+
 ## v3.0.1
 - Both source and target actor are now mentioned in the transfer amount window
 
