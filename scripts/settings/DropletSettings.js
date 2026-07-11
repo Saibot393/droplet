@@ -1,4 +1,5 @@
 import {cModuleName, Translate} from "../utils/Dropletutils.js";
+import {cPf2e} from "../utils/systemutils.js";
 
 Hooks.once("init", () => {  // game.settings.get(cModuleName, "")
   //Settings
@@ -58,7 +59,7 @@ Hooks.once("init", () => {  // game.settings.get(cModuleName, "")
 	name: Translate("Settings.applytoSheetDrop.name"),
 	hint: Translate("Settings.applytoSheetDrop.descrp"),
 	scope: "world",
-	config: true,
+	config: game.system.id != cPf2e,
 	type: Boolean,
 	default: true
   }); 

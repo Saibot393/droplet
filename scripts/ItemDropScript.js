@@ -1,5 +1,6 @@
 import {cModuleName, Dropletutils, Translate} from "./utils/Dropletutils.js";
 import {openNewInput} from "./helpers/popupInput.js";
+import {cPf2e} from "./utils/systemutils.js";
 
 const cValidDropTypes = ["Item", "ActiveEffect"];
 const cNoDeleteTypes = ["ActiveEffect"];
@@ -271,59 +272,61 @@ class ItemDropManager {
 	}
 	
 	static onSheetDrop(pTargetActor, pData) {
-		if (game.settings.get(cModuleName, "applytoSheetDrop")) {
-			let vUpdateHook;
-			let vCreateHook;
-		
-			let vCall = async (pTargetItem) => {
-				Hooks.off("updateItem", vUpdateHook);
-				Hooks.off("createItem", vCreateHook);
-				
-				let vKeys = Dropletutils.functionKeys();
-				
-				if (pTargetActor.isOwner) {
-					if (pData.type == "Item") {
-						let vSourceItem = await fromUuid(pData.uuid);
-						
-						if (vSourceItem) {
-							if (vSourceItem.actor && (vSourceItem.actor != pTargetActor)) {
-								let vSourceID = vSourceItem.getFlag("core", "sourceId");
+		if (!game.system.id == cPf2e) { //character sheet item drop quantities are already handled by pf2e
+			if (game.settings.get(cModuleName, "applytoSheetDrop")) {
+				let vUpdateHook;
+				let vCreateHook;
+			
+				let vCall = async (pTargetItem) => {
+					Hooks.off("updateItem", vUpdateHook);
+					Hooks.off("createItem", vCreateHook);
+					
+					let vKeys = Dropletutils.functionKeys();
+					
+					if (pTargetActor.isOwner) {
+						if (pData.type == "Item") {
+							let vSourceItem = await fromUuid(pData.uuid);
+							
+							if (vSourceItem) {
+								if (vSourceItem.actor && (vSourceItem.actor != pTargetActor)) {
+									let vSourceID = vSourceItem.getFlag("core", "sourceId");
 
-								let vSourceAmount = vSourceItem.system.quantity;
-								
-								let vTargetItem = pTargetItem || pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
-								
-								let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys, undefined, true);
+									let vSourceAmount = vSourceItem.system.quantity;
+									
+									let vTargetItem = pTargetItem || pTargetActor?.items.filter(vItem => vItem.getFlag("core", "sourceId") == vSourceItem.uuid || (vSourceID && vItem.getFlag("core", "sourceId") == vSourceID)).pop(); //try to find last added matching item
+									
+									let vTransfered = await ItemDropManager.manageTransferDeletion(vSourceItem, vKeys, undefined, true);
 
-								if (vTargetItem && (vSourceAmount != vTransfered)) {
-									//fix amount of transfered items
-									if (vTransfered > 0 || game.settings.get(cModuleName, "transferZeros") || (vTargetItem.system.quantity > vSourceAmount)) {
-										vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
+									if (vTargetItem && (vSourceAmount != vTransfered)) {
+										//fix amount of transfered items
+										if (vTransfered > 0 || game.settings.get(cModuleName, "transferZeros") || (vTargetItem.system.quantity > vSourceAmount)) {
+											vTargetItem.update({system : {quantity : vTargetItem.system.quantity - (vSourceAmount-vTransfered)}});
+										}
+										else {
+											pTargetActor.deleteEmbeddedDocuments(vTargetItem.documentName, [vTargetItem.id]);
+										}
 									}
-									else {
-										pTargetActor.deleteEmbeddedDocuments(vTargetItem.documentName, [vTargetItem.id]);
-									}
-								}
-								
-								if (vTransfered < vSourceAmount) {//catch a preimplemented system transfer case (e.g. shift in d&d5e)
-									let vSourceActor = vSourceItem.parent;
-								
-									if (vSourceActor && !vSourceActor.items.find(vItem => vItem.id == vSourceItem.id)) {
-										//recreate source item
-										let vCopy = (foundry.utils?.duplicate || duplicate)(vSourceItem);
-										vCopy.system.quantity = vSourceAmount - vTransfered;
-										vSourceActor.createEmbeddedDocuments(vSourceItem.documentName, [vCopy]);
+									
+									if (vTransfered < vSourceAmount) {//catch a preimplemented system transfer case (e.g. shift in d&d5e)
+										let vSourceActor = vSourceItem.parent;
+									
+										if (vSourceActor && !vSourceActor.items.find(vItem => vItem.id == vSourceItem.id)) {
+											//recreate source item
+											let vCopy = (foundry.utils?.duplicate || duplicate)(vSourceItem);
+											vCopy.system.quantity = vSourceAmount - vTransfered;
+											vSourceActor.createEmbeddedDocuments(vSourceItem.documentName, [vCopy]);
+										}
 									}
 								}
 							}
 						}
 					}
 				}
+				
+				//wait for update/creation of new item
+				vUpdateHook = Hooks.once("updateItem", vCall);
+				vCreateHook = Hooks.once("createItem", vCall);
 			}
-			
-			//wait for update/creation of new item
-			vUpdateHook = Hooks.once("updateItem", vCall);
-			vCreateHook = Hooks.once("createItem", vCall);
 		}
 	}
 }

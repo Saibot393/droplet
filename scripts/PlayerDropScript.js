@@ -113,6 +113,7 @@ Hooks.on("renderSceneNavigation", () => {
 				let vDropData = pEvent.dataTransfer.getData("text/plain") ? JSON.parse(pEvent.dataTransfer.getData("text/plain")) : undefined;
 
 				if (vDropData?.type == "User") {
+					pEvent.stopPropagation();
 					PlayerDropManager.onPlayerDrop(vDropData.userID, vSceneID);
 				}
 			}

@@ -1,5 +1,9 @@
 const cDCC = "dcc"; //Dungeon Crwal Classic
 
+const cPf2e = "pf2e";
+
+export{cDCC, cPf2e};
+
 export class systemutils {
 	//DELCARATIONS
 	static isystem(pSystem) {} //returns if the current system is pSystem
