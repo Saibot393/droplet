@@ -1,3 +1,6 @@
+## v3.0.3
+- small bug fix for sheet dropping
+
 ## v3.0.2
 - Improved pf2e item drop compatibility
 
