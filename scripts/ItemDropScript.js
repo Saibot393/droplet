@@ -272,7 +272,7 @@ class ItemDropManager {
 	}
 	
 	static onSheetDrop(pTargetActor, pData) {
-		if (!game.system.id == cPf2e) { //character sheet item drop quantities are already handled by pf2e
+		if (game.system.id != cPf2e) { //character sheet item drop quantities are already handled by pf2e
 			if (game.settings.get(cModuleName, "applytoSheetDrop")) {
 				let vUpdateHook;
 				let vCreateHook;
